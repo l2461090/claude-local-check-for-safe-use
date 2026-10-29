@@ -1,13 +1,15 @@
 {
-  "version": "1.0.2",
+  "version": "1.1.0",
   "files": {
-    "app.js": "cc24c2175b766971a3e0737d5fd8809d0fe40b879e30b79336c786d0d9f72abb",
+    "app.js": "8e1215884bb6d49ccbb18294a4e0a3adcc701139e9782f503579e480362e19d7",
     "checks.js": "eba705f9f3ae122c405425e496886fc1fca1b84dbd1fa7ec6a63000aaba6fbaf",
+    "consistency-ui.js": "092efa58e3bdddeaac6ccf323ce99aa0ad31e681f423a29dedf1000b0d1915da",
+    "consistency.js": "8727b011b9681af2db12381191f30df0e1230bc2c303bbe1d61ef1fc6b9b1f96",
     "icon.svg": "e95e51e64ecc703bab8665de7cd757a3e3335043cfeaaed74e55c82c035c8c9e",
-    "index.html": "429f93f0c87e6d7526279aa4b3bf01b831d554d37d31f4d0d72999e46b1717f8",
-    "model.js": "fc09d08d1fea469a0295b82fc061188a68f929158e90550ee95b25efee126b92",
+    "index.html": "1c9751812dfa9de89a2251fd48568e5b19c7a903412ad54724a5d648945251e1",
+    "model.js": "9f2d44b861120845d2aa9104dc88c9bb4be3e5fe8c6025f10f18965a9caf3730",
     "rules.js": "376f21c8abf5c6e596189b835eb91b97e51ad0c7396174eb52d7d6fd33062fbb",
-    "style.css": "6912fe18399d29a5fbf55d14bcadcf42cb8af20dfbefbc82532b45799f024d00",
-    "zh/index.html": "429f93f0c87e6d7526279aa4b3bf01b831d554d37d31f4d0d72999e46b1717f8"
+    "style.css": "beeef5b99850a86b61cfe270874b9123dedc311ac74d7f30daaaca3b0bdbbdbc",
+    "zh/index.html": "1c9751812dfa9de89a2251fd48568e5b19c7a903412ad54724a5d648945251e1"
   }
 }

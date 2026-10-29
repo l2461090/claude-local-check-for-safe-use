@@ -25,6 +25,7 @@
         <span class="section-label" data-text="result">环境检测结论</span>
         <h2 id="summary-title">等待检测</h2>
         <p id="summary-detail">点击「开始检测」，查看当前浏览器的结果。</p>
+        <p id="geo-overview" class="note" role="status" aria-live="polite">IP 一致性：未检测</p>
         <p class="note" data-text="disclaimer">浏览器特征的启发式评分，仅供参考，不代表 Claude 官方判断。</p>
       </div>
       <div class="score-area">
@@ -42,6 +43,14 @@
         <p class="match-rule" data-text="matchRule">匹配程度达到 25% 的信号列在这里；全部计分见下方明细。</p>
         <p id="matched-empty" hidden></p>
       </section>
+    </section>
+    <section class="consistency" aria-labelledby="geo-title">
+      <div class="section-head"><h2 id="geo-title" data-text="geoTitle">IP 与环境一致性</h2><span data-text="geoSeparate">已纳入总分 · IP 相关项目共 49 分</span></div>
+      <p class="geo-notice" data-text="geoPrivacy">默认关闭。开启并点击查询或开始检测后，浏览器将直接访问 ipapi.co。该服务会收到公网出口 IP 和常规请求头（例如浏览器标识、语言）；不会发送本页评分、字体、账号或系统时区。结果仅留在页面内存；完整 IP 不进入结果图。</p>
+      <label class="geo-toggle"><input id="allow-geo" type="checkbox"><span data-text="geoToggle">允许联网查询 IP 地区（ipapi.co）</span></label>
+      <button id="geo-query" type="button" class="secondary" disabled data-text="geoQuery">查询 IP 并比对</button>
+      <div id="geo-result" data-state="unknown" role="status" aria-live="polite"><h3 id="geo-status">未检测 · 联网查询已关闭</h3><dl id="geo-details"></dl></div>
+      <p class="note" data-text="geoLimits">IP 地区和时区来自资料库，可能有误；同一国家可能有多个时区。按同一时刻计算时差，考虑夏令时。时区同名、同偏移及不一致分别显示；同偏移不证明同一地区。本版将时区、语言和区域格式的不一致计分。这是本工具的启发式规则，不证明真实所在地、违规或封号概率。代理分流可能使此服务看到的出口与其他网站不同。</p>
     </section>
     <section class="checks">
       <div class="section-head"><h2 data-text="checks">检测明细</h2><span data-text="count">10 项信号 · 总权重 100</span></div>

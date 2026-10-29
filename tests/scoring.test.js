@@ -5,10 +5,10 @@ import {checks,assess,verdict,matchedSignals} from "../assets/site/model.js";
 
 test("weights and three-band boundaries",() => {
   assert.equal(checks.reduce((sum,c)=>sum+c.weight,0),100);
-  for (const [score,tier,word] of [[0,"low","不是"],[30,"low","不是"],[31,"medium","可能是"],[40,"medium","可能是"],[60,"medium","可能是"],[61,"high","绝对是"],[80,"high","绝对是"],[100,"high","绝对是"]]) {
+  for (const [score,tier,label] of [[0,"low","低风险"],[30,"low","低风险"],[31,"medium","中等风险"],[40,"medium","中等风险"],[60,"medium","中等风险"],[61,"high","高风险"],[80,"high","高风险"],[100,"high","高风险"]]) {
     const result = verdict(score);
     assert.equal(result.tier,tier);
-    assert.ok(result.title.includes(word));
+    assert.equal(result.label,label);
   }
 });
 test("missing checks cannot silently become a complete low-risk result",() => {
@@ -17,7 +17,8 @@ test("missing checks cannot silently become a complete low-risk result",() => {
   delete results.webrtc;
   assert.equal(assess(results).missing,10);
   assert.equal(assess(results).upper,10);
-  assert.ok(verdict(60,10).detail.includes("完整评级可能改变"));
+  assert.equal(verdict(60,10).tier,"unknown");
+  assert.equal(verdict(60,10).label,"评分不完整");
 });
 test("known measurements contribute their weights and invalid values are untested",() => {
   const results=Object.fromEntries(checks.map(c=>[c.id,{strength:1}]));

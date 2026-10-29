@@ -28,7 +28,7 @@ APP = "claude-local-check"
 HTTP = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 CSP = ("default-src 'self'; script-src 'self' 'unsafe-inline'; "
        "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; "
-       "connect-src 'self'; font-src 'self'; object-src 'none'; "
+       "connect-src 'self' https://ipapi.co; font-src 'self'; object-src 'none'; "
        "base-uri 'self'; form-action 'none'; frame-ancestors 'none'")
 
 

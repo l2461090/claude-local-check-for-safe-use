@@ -1,6 +1,8 @@
 // Copyright (c) 2026 l2461090. MIT License.
 import {checks, assess, matchedSignals} from "./model.js";
 import {inspect} from "./checks.js";
+import {initConsistency} from "./consistency-ui.js";
+import {fuseResults} from "./consistency.js";
 
 const lang = location.pathname.startsWith("/zh") ? "zh" : "en";
 const zh = lang === "zh";
@@ -9,14 +11,20 @@ const words = {
   heading:["看清你的浏览器环境","Understand your browser environment"],
   lead:["一键检查，直接查看评分、结论与每项检测依据。","One scan. A clear assessment and the evidence behind each check."],
   result:["环境检测结论","ENVIRONMENT ASSESSMENT"],
-  disclaimer:["浏览器特征的启发式评分，仅供参考，不代表 Claude 官方判断。","A browser heuristic for reference, not an official Claude assessment."],
+  disclaimer:["本工具按浏览器特征和 IP 一致性计分；不代表 Claude 官方判断或封号概率。","A browser and IP-consistency heuristic, not an official Claude assessment or ban probability."],
   start:["开始检测","Start scan"],save:["保存结果图片","Save result image"],
   local:["结果留在当前浏览器","Results stay in this browser"],
   checks:["检测明细","Check details"],count:["10 项信号 · 总权重 100","10 signals · 100 total weight"],
   matched:["命中的信号","Matched signals"],
   matchRule:["匹配程度达到 25% 的信号列在这里；全部计分见下方明细。","Signals with strength ≥25% appear here; all contributions are listed below."],
+  geoTitle:["IP 与环境一致性","IP and environment consistency"],
+  geoSeparate:["已纳入总分 · IP 相关项目共 49 分","Included in total · IP-dependent checks: 49 points"],
+  geoPrivacy:["默认关闭。开启并点击查询或开始检测后，浏览器将直接访问 ipapi.co。该服务会收到公网出口 IP 和常规请求头（例如浏览器标识、语言）；不会发送本页评分、字体、账号或系统时区。结果仅留在页面内存；完整 IP 不进入结果图。","Off by default. After enabling and querying or starting a scan, your browser contacts ipapi.co directly. It receives your public egress IP and standard request headers, such as browser identity and language; no scores, fonts, accounts or system timezone are sent. Results stay in page memory; full IPs are excluded from exported images."],
+  geoToggle:["允许联网查询 IP 地区（ipapi.co）","Allow online IP location lookup (ipapi.co)"],
+  geoQuery:["查询 IP 并比对","Look up IP and compare"],
+  geoLimits:["IP 地区和时区来自资料库，可能有误；同一国家可能有多个时区。按同一时刻计算时差，考虑夏令时。时区同名、同偏移及不一致分别显示；同偏移不证明同一地区。本版将时区、语言和区域格式的不一致计分。这是本工具的启发式规则，不证明真实所在地、违规或封号概率。代理分流可能使此服务看到的出口与其他网站不同。","IP locations and timezones are estimates and can be wrong; a country may have multiple timezones. Offsets are compared at the same instant, including DST. Matching zones, equal offsets and differing offsets are distinguished. Equal offsets do not establish the same location. This version scores timezone, language and locale mismatches as heuristic signals, not proof of location, violations or ban probability. Split proxy routes may expose a different exit to this provider than to other websites."],
   privacy:["本地检测说明","About this local scan"],
-  privacyDetail:["结果不上传。WebRTC 默认参与检测，点击开始检测后会连接 Google 公共 STUN。其他项目在当前浏览器中完成。","Results are not uploaded. WebRTC runs by default and contacts Google public STUN when a scan starts. Other checks run in this browser."],
+  privacyDetail:["结果不上传。WebRTC 默认参与检测，点击开始检测后会连接 Google 公共 STUN。IP 一致性查询另有独立开关，默认关闭。其他项目在当前浏览器中完成。","Results are not uploaded. WebRTC runs by default and contacts Google public STUN when a scan starts. IP consistency has a separate switch that is off by default. Other checks run in this browser."],
   webrtc:["WebRTC 网络检测（默认开启；会连接 Google 公共 STUN 服务器）","WebRTC network check (enabled by default; contacts Google public STUN)"],
   partial:["WebRTC 观察 1 秒，发现候选 IP 加 5 分；未发现按 0 分计算，不表示没有泄露。手动关闭后仅显示部分分数。此项不判断 IP 所属国家。","WebRTC observes for 1 second: an IP candidate adds 5 points, no candidate adds 0 and does not prove no leak. Disabling it gives a partial score. It does not geolocate IPs."],
   rules:["查看评级规则","View scoring rules"],
@@ -37,6 +45,10 @@ $("summary-detail").textContent = zh ? "点击「开始检测」，查看当前�
 $("rating").textContent = zh ? "待检测" : "Not scanned";
 
 const rows = new Map();
+let measured = null;
+let completed = null;
+let busy = false;
+const consistency = initConsistency(zh, () => { if (measured) renderScore(); });
 for (const [index, check] of checks.entries()) {
   const li = document.createElement("li");
   li.className = "check";
@@ -53,9 +65,6 @@ for (const [index, check] of checks.entries()) {
   bottom.append(value,contribution); li.append(top,bottom); $("check-list").append(li);
   rows.set(check.id,{li,value,contribution});
 }
-
-let completed = null;
-let busy = false;
 
 function renderMatches(results, missing) {
   const hits = matchedSignals(results);
@@ -78,9 +87,33 @@ function renderMatches(results, missing) {
   $("matched").hidden = false;
 }
 
+function renderScore() {
+  const results = fuseResults(measured,consistency.snapshot(),lang);
+  const result = assess(results,lang);
+  completed = {result,results};
+  for(const check of checks) {
+    const row=rows.get(check.id), found=results[check.id];
+    row.value.textContent=found.value;
+    row.contribution.textContent=typeof found.strength==='number' ? `+${Math.round(found.strength*check.weight)}` : '—';
+    row.li.dataset.state=found.strength>=0.25?'hit':'done';
+  }
+  renderMatches(results,result.missing);
+  $("summary-title").textContent=result.title;
+  $("summary-detail").textContent=result.detail;
+  $("score").textContent=result.missing===100?'—':String(result.score);
+  $("score-unit").textContent=result.missing ? (zh?'/ 100 · 已测部分':'/ 100 · partial'):'/ 100';
+  $("rating").textContent=result.label;
+  document.querySelector('.report').dataset.tier=result.tier;
+  document.querySelector('.meter').style.setProperty('--sweep',`${result.score*3.6}deg`);
+  $("save").hidden=false;
+  $("progress").textContent=zh?'检测完成 · 结果未上传':'Complete · nothing uploaded';
+}
+
 async function scan() {
   if (busy) return;
   busy = true;
+  measured = null;
+  consistency.reset();
   completed = null;
   $("matched").hidden = true;
   $("matched-list").replaceChildren();
@@ -105,7 +138,9 @@ async function scan() {
       $("progress").textContent = `${i + 1} / ${checks.length} · ${check[lang]}`;
       await new Promise(resolve => setTimeout(resolve, 460));
       try {
-        results[check.id] = await inspect(check.id,lang,$("allow-webrtc").checked);
+        results[check.id] = ["timezone","language","locale","offset"].includes(check.id)
+          ? {strength:null,value:zh ? "等待 IP 一致性查询" : "Waiting for IP lookup"}
+          : await inspect(check.id,lang,$("allow-webrtc").checked);
       } catch {
         results[check.id] = {strength:0,failed:true,value:zh ? "检测失败，按兼容规则计 0 分" : "Check failed; compatibility score 0"};
       }
@@ -116,18 +151,9 @@ async function scan() {
       row.li.dataset.state = found.strength >= 0.25 ? "hit" : "done";
       await new Promise(resolve => setTimeout(resolve, 150));
     }
-    const result = assess(results,lang);
-    completed = {result,results};
-    renderMatches(results,result.missing);
-    $("summary-title").textContent = result.title;
-    $("summary-detail").textContent = result.detail;
-    $("score").textContent = result.missing === 100 ? "—" : String(result.score);
-    $("score-unit").textContent = result.missing ? (zh ? "/ 100 · 已测部分" : "/ 100 · partial") : "/ 100";
-    $("rating").textContent = result.label;
-    document.querySelector(".report").dataset.tier = result.tier;
-    document.querySelector(".meter").style.setProperty("--sweep",`${result.score * 3.6}deg`);
-    $("save").hidden = false;
-    $("progress").textContent = zh ? "检测完成 · 结果未上传" : "Complete · nothing uploaded";
+    measured = results;
+    await consistency.run();
+    renderScore();
   } catch {
     $("summary-title").textContent = zh ? "检测未完成，请重试" : "Scan incomplete. Please retry.";
     $("summary-detail").textContent = "";
@@ -160,7 +186,7 @@ function exportImage() {
     return chip;
   });
   const matchedHeight = hits.length ? 85 + (chipRow + 1)*54 : 110;
-  canvas.height = 1450 + matchedHeight;
+  canvas.height = 1570 + matchedHeight;
   c.fillStyle = "#f7f7f2"; c.fillRect(0,0,1080,canvas.height);
   c.fillStyle = "#282a27"; c.font = "bold 34px sans-serif";
   c.fillText(document.title,70,85);
@@ -214,6 +240,8 @@ function exportImage() {
   }
   c.font = "19px sans-serif";
   lines(text("disclaimer"),930).forEach((line,i) => c.fillText(line,70,1320+matchedHeight+i*28));
+  c.fillStyle = "#74766d"; c.font = "19px sans-serif";
+  lines((zh ? "IP 一致性（已纳入评分）：" : "IP consistency (included in score): ") + consistency.summary(),930).forEach((line,i) => c.fillText(line,70,1400+matchedHeight+i*28));
   canvas.toBlob(blob => {
     if (!blob) return;
     const url = URL.createObjectURL(blob);
