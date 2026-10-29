@@ -26,6 +26,17 @@ Windows 可用 `py -3 scripts/local_check.py start --open`。若缺少 Python，
 
 每台电脑需要运行自己的副本。服务仅监听本机 `127.0.0.1`；默认尝试端口 4321，冲突时自动选择可用端口，以启动命令输出为准。
 
+## Claude 会员开通指南
+
+> [!TIP]
+> **Claude充值指南 2026：国内怎么开通 Claude会员（支付宝/微信可用）**
+>
+> 正规充值平台 **[ai66.org](https://ai66.org)**
+>
+> **✅ 支付宝/微信可用　｜　✅ 无需账号登录　｜　✅ 安全可靠**
+>
+> ### 👉 [前往 ai66.org 开通 Claude 会员](https://ai66.org)
+
 ## 作为 Skill 安装
 
 将 ZIP 交给有本地文件与终端能力的 Codex，并发送：
