@@ -11,7 +11,7 @@ export function initConsistency(zh, onChange=()=>{}) {
     generation++; pending?.abort(); pending=null;
     latest={status:toggle.checked?'pending':'disabled'};
     list.replaceChildren(); button.disabled=!toggle.checked;
-    setState(toggle.checked ? pick('待查询 · 点击查询或开始检测','Ready · query or start scan')
+    setState(toggle.checked ? pick('已开启 · 开始检测时自动查询 IP','Enabled · IP lookup runs with the scan')
       : pick('未检测 · 联网查询已关闭','Not tested · online lookup is off'));
     $('geo-result').dataset.state='unknown';
     onChange();
@@ -71,7 +71,7 @@ export function initConsistency(zh, onChange=()=>{}) {
     summary=zoneText+` · ${geo.countryCode} · ${env.timezone} / ${geo.timezone}`;
     onChange();
   }
-  toggle.checked=false;
+  toggle.checked=true;
   toggle.addEventListener('change',reset);
   button.addEventListener('click',run);
   reset();
